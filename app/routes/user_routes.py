@@ -1,48 +1,46 @@
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Query, Depends
+
 from app.schemas.user_schema import (
     UserCreate,
     UserResponse,
-    UserMessage
+    UserMessage,
+    UserUpdate,
+    UserPatch
 )
+
+from app.dependencies.user_dependencies import (
+    get_user_or_404,
+    create_error_response,
+    get_api_config
+)
+
+from app.services.user_service import (
+    email_exists,
+    update_user,
+    patch_user,
+    delete_user
+)
+
+from app.data.users_db import users_db
 
 router = APIRouter(
     prefix="/users",
     tags=["Users"]
 )
 
-# Base de datos temporal en memoria
-users_db = [
-    {
-        "id": 1,
-        "name": "Tatiana",
-        "email": "tatiana@gmail.com",
-        "role": "admin",
-        "is_active": True
-    },
-    {
-        "id": 2,
-        "name": "Carlos",
-        "email": "carlos@gmail.com",
-        "role": "support",
-        "is_active": True
-    },
-    {
-        "id": 3,
-        "name": "Maria",
-        "email": "maria@gmail.com",
-        "role": "user",
-        "is_active": False
-    }
-]
 
-
-# GET /users
-# Listar todos los usuarios o filtrar por rol y estado
-@router.get("/", response_model=list[UserResponse])
+@router.get(
+    "/",
+    response_model=list[UserResponse],
+    summary="Listar usuarios",
+    description="Obtiene la lista completa de usuarios o permite filtrar por rol y estado.",
+    response_description="Lista de usuarios encontrada"
+)
 def get_users(
     role: str | None = Query(None),
     is_active: bool | None = Query(None)
 ):
+
     filtered_users = users_db
 
     if role is not None:
@@ -62,38 +60,60 @@ def get_users(
     return filtered_users
 
 
-# GET /users/{user_id}
-# Buscar usuario por ID
-@router.get("/{user_id}", response_model=UserResponse)
+@router.get(
+    "/config/info",
+    summary="Información de la API",
+    description="Obtiene la configuración general de la API.",
+    response_description="Configuración obtenida correctamente"
+)
+def get_config(
+    config=Depends(get_api_config)
+):
+
+    return config
+
+
+@router.get(
+    "/{user_id}",
+    response_model=UserResponse,
+    summary="Consultar usuario",
+    description="Obtiene la información de un usuario mediante su ID.",
+    response_description="Usuario encontrado"
+)
 def get_user_by_id(user_id: int):
 
     for user in users_db:
+
         if user["id"] == user_id:
             return user
 
-    raise HTTPException(
-        status_code=404,
-        detail="Usuario no encontrado"
+    create_error_response(
+        "Usuario no encontrado",
+        404
     )
 
 
-# POST /users
-# Crear nuevo usuario
-@router.post("/", response_model=UserMessage, status_code=201)
+@router.post(
+    "/",
+    response_model=UserMessage,
+    status_code=201,
+    summary="Crear usuario",
+    description="Registra un nuevo usuario en el sistema.",
+    response_description="Usuario creado correctamente"
+)
 def create_user(user: UserCreate):
 
-    # Validar correo duplicado
     for existing_user in users_db:
+
         if existing_user["email"] == user.email:
-            raise HTTPException(
-                status_code=400,
-                detail="El correo ya está registrado"
+
+            create_error_response(
+                "El correo ya está registrado",
+                400
             )
 
-    # Generar ID automático
     new_id = len(users_db) + 1
 
-    # Crear usuario
     new_user = {
         "id": new_id,
         "name": user.name,
@@ -102,10 +122,105 @@ def create_user(user: UserCreate):
         "is_active": user.is_active
     }
 
-    # Guardar usuario
     users_db.append(new_user)
 
     return {
         "message": "Usuario creado correctamente",
         "user": new_user
+    }
+
+
+@router.put(
+    "/{user_id}",
+    summary="Actualizar usuario completamente",
+    description="Reemplaza completamente la información de un usuario existente.",
+    response_description="Usuario actualizado",
+    response_model=UserResponse,
+    status_code=200
+)
+def update_user_route(
+    user_id: int,
+    user_data: UserUpdate,
+    existing_user=Depends(get_user_or_404)
+):
+
+    if email_exists(
+        user_data.email,
+        exclude_user_id=user_id
+    ):
+
+        create_error_response(
+            "El correo ya está registrado",
+            400
+        )
+
+    updated_user = update_user(
+        user_id,
+        user_data.model_dump()
+    )
+
+    return updated_user
+
+
+@router.patch(
+    "/{user_id}",
+    summary="Actualizar parcialmente un usuario",
+    description="Modifica únicamente los campos enviados por el cliente.",
+    response_description="Usuario actualizado parcialmente",
+    response_model=UserResponse,
+    status_code=200
+)
+def patch_user_route(
+    user_id: int,
+    user_data: UserPatch,
+    existing_user=Depends(get_user_or_404)
+):
+
+    update_data = user_data.model_dump(
+        exclude_unset=True
+    )
+
+    if not update_data:
+
+        create_error_response(
+            "Debe enviar al menos un campo para actualizar",
+            400
+        )
+
+    if "email" in update_data:
+
+        if email_exists(
+            update_data["email"],
+            exclude_user_id=user_id
+        ):
+
+            create_error_response(
+                "El correo ya está registrado",
+                400
+            )
+
+    updated_user = patch_user(
+        user_id,
+        update_data
+    )
+
+    return updated_user
+
+
+@router.delete(
+    "/{user_id}",
+    summary="Eliminar usuario",
+    description="Elimina un usuario existente mediante su ID.",
+    response_description="Usuario eliminado correctamente",
+    status_code=200
+)
+def delete_user_route(
+    user_id: int,
+    existing_user=Depends(get_user_or_404)
+):
+
+    delete_user(user_id)
+
+    return {
+        "message": "Usuario eliminado correctamente"
     }

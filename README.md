@@ -435,3 +435,6 @@ También se comprendió la importancia de los Response Models para estandarizar 
 Swagger UI facilitó la documentación y las pruebas de cada endpoint, permitiendo validar el correcto funcionamiento de la aplicación.
 
 FastAPI demostró ser una herramienta moderna, eficiente y fácil de usar para el desarrollo de APIs REST en Python.
+
+------------------------------------------
+
