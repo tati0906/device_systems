@@ -1,81 +1,131 @@
-from app.data.users_db import users_db
+from sqlalchemy.orm import Session
+from app.models.user_model import User
 
+# Crear usuario
+def create_user(db: Session, user_data):
+    user = User(
+        name=user_data.name,
+        email=user_data.email,
+        role=user_data.role,
+        is_active=user_data.is_active
+    )
 
-def get_all_users():
-    return users_db
+    db.add(user)
+    db.commit()
+    db.refresh(user)
 
+    return user
 
-def get_user_by_id(user_id: int):
-
-    for user in users_db:
-
-        if user["id"] == user_id:
-            return user
-
-    return None
-
-
-def email_exists(
-    email: str,
-    exclude_user_id: int = None
+# Obtener todos los usuarios
+def get_users(
+    db: Session,
+    role=None,
+    is_active=None,
+    order_by=None
 ):
+    query = db.query(User)
 
-    for user in users_db:
+    if role:
+        query = query.filter(User.role == role)
 
-        if exclude_user_id is not None:
+    if is_active is not None:
+        query = query.filter(
+            User.is_active == is_active
+        )
 
-            if user["id"] == exclude_user_id:
-                continue
+    if order_by == "name":
+        query = query.order_by(User.name)
 
-        if user["email"] == email:
-            return True
+    elif order_by == "created_at":
+        query = query.order_by(User.created_at)
 
-    return False
+    return query.all()
 
 
+# Buscar usuario por ID
+def get_user_by_id(
+    db: Session,
+    user_id: int
+):
+    return (
+        db.query(User)
+        .filter(User.id == user_id)
+        .first()
+    )
+
+# Buscar usuario por email
+def get_user_by_email(
+    db: Session,
+    email: str
+):
+    return (
+        db.query(User)
+        .filter(User.email == email)
+        .first()
+    )
+
+# Actualización completa
 def update_user(
-    user_id: int,
-    data: dict
+    db: Session,
+    user,
+    user_data
 ):
+    user.name = user_data.name
+    user.email = user_data.email
+    user.role = user_data.role
+    user.is_active = user_data.is_active
 
-    for index, user in enumerate(users_db):
+    db.commit()
+    db.refresh(user)
 
-        if user["id"] == user_id:
+    return user
 
-            users_db[index] = {
-                "id": user_id,
-                **data
-            }
-
-            return users_db[index]
-
-    return None
-
-
+# Actualización parcial
 def patch_user(
-    user_id: int,
-    data: dict
+    db: Session,
+    user,
+    user_data
 ):
+    update_data = (
+        user_data.model_dump(
+            exclude_unset=True
+        )
+    )
 
-    for user in users_db:
+    for key, value in update_data.items():
+        setattr(user, key, value)
 
-        if user["id"] == user_id:
+    db.commit()
+    db.refresh(user)
 
-            user.update(data)
+    return user
 
-            return user
+# Eliminar usuario
+def delete_user(
+    db: Session,
+    user
+):
+    db.delete(user)
+    db.commit()
 
-    return None
+# Buscar por rol
+def get_users_by_role(
+    db: Session,
+    role: str
+):
+    return (
+        db.query(User)
+        .filter(User.role == role)
+        .all()
+    )
 
-
-def delete_user(user_id: int):
-
-    for index, user in enumerate(users_db):
-
-        if user["id"] == user_id:
-
-            deleted_user = users_db.pop(index)
-
-            return deleted_user
-
-    return None
+# Buscar por estado
+def get_users_by_status(
+    db: Session,
+    is_active: bool
+):
+    return (
+        db.query(User)
+        .filter(User.is_active == is_active)
+        .all()
+    )

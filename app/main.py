@@ -1,47 +1,27 @@
 from fastapi import FastAPI
 
+from app.database.connection import engine, Base
 from app.routes.user_routes import router as user_router
 
+
+# Crear tablas automáticamente
+Base.metadata.create_all(bind=engine)
+
+
 app = FastAPI(
-    title="Device Systems API",
-    description="""
-API REST para la gestión de usuarios del sistema Device Systems.
-
-Permite:
-
-- Crear usuarios
-- Listar usuarios
-- Consultar usuarios por ID
-- Filtrar usuarios
-- Actualizar usuarios
-- Eliminar usuarios
-
-Desarrollada con FastAPI y Pydantic v2.
-""",
-    version="2.0.0",
+    title="device_systems API",
+    description="API REST para la gestión de usuarios usando FastAPI y SQLAlchemy",
+    version="3.0.0",
     contact={
-        "name": "Tatiana Vanegas",
-        "email": "tatiana@example.com"
+        "name": "Tatiana Vanegas"
     }
 )
 
 
-@app.middleware("http")
-async def add_custom_headers(request, call_next):
-
-    response = await call_next(request)
-
-    response.headers["X-App-Name"] = "device_systems"
-    response.headers["X-API-Version"] = "2.0"
-
-    return response
-
-
 @app.get("/")
-def home():
-
+def root():
     return {
-        "message": "Bienvenido a Device Systems API"
+        "message": "Bienvenido a device_systems API"
     }
 
 

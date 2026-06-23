@@ -869,3 +869,155 @@ Esta actividad permitió comprender cómo una API REST puede evolucionar desde u
 Durante el desarrollo se implementó un CRUD completo, manejo de errores mediante HTTPException, validación de datos con Pydantic, documentación automática con Swagger y ReDoc, y reutilización de lógica mediante Dependency Injection.
 
 FastAPI demostró ser una herramienta moderna y eficiente para el desarrollo de APIs REST gracias a su facilidad de uso, velocidad y generación automática de documentación.
+
+--------------------------------------------------------------------------------------------------------------------------
+
+# Device Systems API EV09
+
+
+## Captura de la estructura del proyecto
+
+Insertar aquí la captura de la estructura completa del proyecto en Visual Studio Code.
+
+Ejemplo:
+
+![Estructura del proyecto](capturas/estructura9.png)
+
+---
+
+## Captura de la base de datos generada
+
+Insertar aquí la captura donde se observe la base de datos SQLite generada (`device_systems.db`) y los registros almacenados.
+
+Ejemplo:
+
+![Base de datos](capturas/sqlite.png)
+
+---
+
+## Capturas de Swagger UI
+
+### Swagger General
+
+![Swagger General](capturas/11.1.png)
+
+### Endpoint Documentado - Schema de Entrada
+
+![Endpoint Documentado, Schema Entrada](capturas/11.2.3.png)
+
+### Schema de Respuesta
+
+![Schema Respuesta](capturas/11.4.png)
+
+### Parámetros de Consulta
+
+![Parámetros de Consulta](capturas/11.5.png)
+
+### Parámetro de Ruta
+
+![Parámetro de Ruta](capturas/11.6.png)
+
+### ReDoc
+
+![ReDoc](capturas/11.7.png)
+
+---
+
+## Evidencia de prueba de cada endpoint
+
+### Crear usuario (POST)
+
+![Crear Usuario](capturas/12.1.png)
+
+### Crear usuario con correo duplicado
+
+![Correo Duplicado](capturas/12.2.png)
+
+### Listar usuarios (GET)
+
+![Listar Usuarios](capturas/12.3.png)
+
+### Obtener usuario por ID (GET)
+
+![Usuario por ID](capturas/12.4.png)
+
+### Usuario inexistente
+
+![Usuario Inexistente](capturas/12.5.png)
+
+### Filtrar usuarios por rol
+
+![Filtro por Rol](capturas/12.6.png)
+
+### Filtrar usuarios activos
+
+![Filtro Activos](capturas/12.7.png)
+
+### Actualizar usuario completo (PUT)
+
+![PUT Usuario](capturas/12.8.png)
+
+### Actualizar usuario parcialmente (PATCH)
+
+![PATCH Usuario](capturas/12.9.png)
+
+### Eliminar usuario (DELETE)
+
+![DELETE Usuario](capturas/12.10.png)
+
+### Verificar eliminación del usuario
+
+![Usuario Eliminado](capturas/12.11.png)
+
+---
+
+## Evidencia de errores controlados
+
+### Usuario inexistente
+
+![Usuario Inexistente](capturas/10.1.png)
+
+### Correo duplicado
+
+![Correo Duplicado](capturas/10.2.png)
+
+### Datos inválidos
+
+![Datos Inválidos](capturas/10.3.png)
+
+### Rol no permitido
+
+![Rol no permitido](capturas/10.4.png)
+
+### PATCH vacío
+
+![PATCH Vacío](capturas/10.5.png)
+
+### Eliminar usuario inexistente
+
+![Eliminar Usuario Inexistente](capturas/10.6.png)
+
+---
+
+## Explicación de la diferencia entre modelo SQLAlchemy y schema Pydantic
+
+Los modelos SQLAlchemy representan las tablas de la base de datos y permiten realizar operaciones CRUD sobre los datos almacenados.
+
+Los schemas Pydantic se utilizan para validar los datos que recibe y devuelve la API. Gracias a ellos se verifica que los datos tengan el formato correcto antes de ser procesados.
+
+En resumen:
+
+- SQLAlchemy se encarga de la persistencia de datos.
+- Pydantic se encarga de la validación de datos.
+- SQLAlchemy interactúa con la base de datos.
+- Pydantic interactúa con las solicitudes y respuestas de la API.
+
+---
+
+## Reflexión final sobre la importancia de usar persistencia en una API
+
+La implementación de persistencia mediante SQLAlchemy y SQLite permitió que la información de los usuarios se almacene de forma permanente, evitando la pérdida de datos al reiniciar el servidor.
+
+Además, el uso de una base de datos facilita la gestión de grandes cantidades de información, mejora la organización de los datos y permite realizar consultas, actualizaciones y eliminaciones de manera eficiente.
+
+Esta actividad permitió comprender la importancia de separar la lógica de negocio, la validación de datos y la persistencia, logrando una API más robusta, escalable y cercana a entornos reales de desarrollo.
