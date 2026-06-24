@@ -33,12 +33,14 @@ router = APIRouter(
     tags=["Users"]
 )
 
-# GET ALL USERS
+
 @router.get(
     "/",
     response_model=list[UserResponse],
     status_code=status.HTTP_200_OK,
-    summary="Obtener todos los usuarios"
+    summary="Obtener todos los usuarios",
+    description="Consulta todos los usuarios registrados. Permite filtrar por rol, estado y ordenar resultados.",
+    response_description="Lista de usuarios obtenida correctamente."
 )
 def read_users(
     role: str | None = Query(default=None),
@@ -54,12 +56,18 @@ def read_users(
     )
 
 
-# GET USER BY ID
 @router.get(
     "/{user_id}",
     response_model=UserResponse,
     status_code=status.HTTP_200_OK,
-    summary="Obtener usuario por ID"
+    summary="Obtener usuario por ID",
+    description="Consulta la información de un usuario mediante su identificador.",
+    response_description="Usuario encontrado correctamente.",
+    responses={
+        404: {
+            "description": "Usuario no encontrado"
+        }
+    }
 )
 def read_user(
     user_id: int,
@@ -79,12 +87,21 @@ def read_user(
     return user
 
 
-# CREATE USER POST
 @router.post(
     "/",
     response_model=UserResponse,
     status_code=status.HTTP_201_CREATED,
-    summary="Crear usuario"
+    summary="Crear usuario",
+    description="Registra un nuevo usuario en el sistema.",
+    response_description="Usuario creado correctamente.",
+    responses={
+        400: {
+            "description": "Correo ya registrado"
+        },
+        422: {
+            "description": "Error de validación"
+        }
+    }
 )
 def create_new_user(
     user: UserCreate,
@@ -107,11 +124,21 @@ def create_new_user(
     )
 
 
-# PUT USER
 @router.put(
     "/{user_id}",
     response_model=UserResponse,
-    summary="Actualizar usuario completo"
+    status_code=status.HTTP_200_OK,
+    summary="Actualizar usuario completo",
+    description="Reemplaza completamente la información de un usuario.",
+    response_description="Usuario actualizado correctamente.",
+    responses={
+        400: {
+            "description": "Correo ya registrado"
+        },
+        404: {
+            "description": "Usuario no encontrado"
+        }
+    }
 )
 def update_existing_user(
     user_id: int,
@@ -147,11 +174,21 @@ def update_existing_user(
     )
 
 
-# PATCH USER
 @router.patch(
     "/{user_id}",
     response_model=UserResponse,
-    summary="Actualizar usuario parcial"
+    status_code=status.HTTP_200_OK,
+    summary="Actualizar usuario parcialmente",
+    description="Actualiza únicamente los campos enviados.",
+    response_description="Usuario actualizado correctamente.",
+    responses={
+        400: {
+            "description": "No se enviaron datos para actualizar"
+        },
+        404: {
+            "description": "Usuario no encontrado"
+        }
+    }
 )
 def patch_existing_user(
     user_id: int,
@@ -186,11 +223,16 @@ def patch_existing_user(
     )
 
 
-# DELETE USER
 @router.delete(
     "/{user_id}",
     status_code=status.HTTP_204_NO_CONTENT,
-    summary="Eliminar usuario"
+    summary="Eliminar usuario",
+    description="Elimina un usuario del sistema.",
+    responses={
+        404: {
+            "description": "Usuario no encontrado"
+        }
+    }
 )
 def delete_existing_user(
     user_id: int,

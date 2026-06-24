@@ -1021,3 +1021,109 @@ La implementación de persistencia mediante SQLAlchemy y SQLite permitió que la
 Además, el uso de una base de datos facilita la gestión de grandes cantidades de información, mejora la organización de los datos y permite realizar consultas, actualizaciones y eliminaciones de manera eficiente.
 
 Esta actividad permitió comprender la importancia de separar la lógica de negocio, la validación de datos y la persistencia, logrando una API más robusta, escalable y cercana a entornos reales de desarrollo.
+
+---------------------------------------------------------------------------------------------------------------------------------
+
+# Device Systems API EV10
+
+## Captura de ejecución de alembic init
+
+![Alembic](capturas/1.png)
+
+---
+
+## Captura de creación de migración con alembic revision --autogenerate
+
+![Alembic](capturas/2.png)
+
+---
+
+## Manejo de errores
+
+### Usuario inexistente
+
+![Manejo de errores](capturas/11.1A.png)
+
+### Dispositivo inexistente
+![Manejo de errores](capturas/11.2A.png)
+
+### Dispositivo no disponible
+
+![Manejo de errores](capturas/11.3A.png)
+
+### Dispositivo no disponible
+
+![Manejo de errores](capturas/11.4A.png)
+I
+### Préstamo inexistente
+
+![Manejo de errores](capturas/11.5A.png)
+
+### Intento de devolver un préstamo ya devuelto
+
+![Manejo de errores](capturas/11.6A.png)
+
+### Número de serie duplicado
+
+![Manejo de errores](capturas/11.7A.png)
+
+
+## Documentación Swagger/OpenAPI
+
+### Ejecutar migraciones con Alembic
+
+![Swagger](capturas/13.1.png)
+
+### Crear usuario.
+
+![Swagger](capturas/13.2.png)
+
+### Crear dispositivo.
+
+![Swagger](capturas/13.3.png)
+
+### Crear préstamo.
+
+![Swagger](capturas/13.4.png)
+
+### Intentar prestar un dispositivo no disponible.
+
+![Swagger](capturas/13.5.png)
+
+### Listar préstamos con información de usuario y dispositivo.
+
+![Swagger](capturas/13.6.png)
+
+### Filtrar préstamos por estado.
+
+![Swagger](capturas/13.7.png)
+
+### Filtrar préstamos por tipo de dispositivo.
+
+![Swagger](capturas/13.8.png)
+
+### Consultar préstamos de un usuario.
+
+![Swagger](capturas/13.9.png)
+
+### Devolver un dispositivo.
+
+![Swagger](capturas/13.10.png)
+
+### Validar que el dispositivo vuelva a estar disponible.
+
+![Swagger](capturas/13.11.png)
+
+### Consultar historial de préstamos del dispositivo.
+
+![Swagger](capturas/13.12.png)
+
+## Reflexión sobre la importancia de migraciones, relaciones y consultas avanzadas
+
+Las migraciones permiten gestionar y controlar los cambios realizados en la estructura de la base de datos durante el desarrollo de un proyecto. Gracias a herramientas como Alembic es posible mantener un historial de modificaciones y garantizar que todos los entornos utilicen la misma versión de la base de datos.
+
+Las relaciones entre tablas permiten modelar correctamente los procesos del sistema. En este proyecto se establecieron relaciones entre usuarios, dispositivos y préstamos mediante claves foráneas, garantizando la integridad de la información y evitando inconsistencias en los datos.
+
+Las consultas avanzadas y los filtros facilitan la obtención de información específica de manera eficiente. Funcionalidades como consultar préstamos por usuario, filtrar por estado o por tipo de dispositivo permiten administrar mejor los recursos y obtener información relevante para la toma de decisiones.
+
+En conclusión, las migraciones, las relaciones entre entidades y las consultas avanzadas son elementos fundamentales para desarrollar aplicaciones robustas, organizadas, escalables y fáciles de mantener.
