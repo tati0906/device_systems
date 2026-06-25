@@ -140,3 +140,6 @@ def return_loan(
     db.refresh(loan)
 
     return loan
+
+def get_loan_details(db: Session):
+    return db.query(Loan).all()

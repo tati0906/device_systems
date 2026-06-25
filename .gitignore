@@ -11,3 +11,5 @@ prueba_alembic/
 
 .idea/
 .vscode/
+
+device_systems.db

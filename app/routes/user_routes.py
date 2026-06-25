@@ -4,8 +4,11 @@ from fastapi import (
     HTTPException,
     Query,
     Response,
+    Request,
     status
 )
+
+from app.core.limiter import limiter
 
 from sqlalchemy.orm import Session
 
@@ -13,7 +16,8 @@ from app.schemas.user_schema import (
     UserCreate,
     UserUpdate,
     UserPatch,
-    UserResponse
+    UserResponse,
+    LoginRequest
 )
 
 from app.dependencies.database_dependency import get_db
@@ -25,8 +29,23 @@ from app.services.user_service import (
     get_user_by_email,
     update_user,
     patch_user,
-    delete_user
+    delete_user,
+    get_users_by_role,
+    get_users_by_status,
+    authenticate_user
 )
+
+from app.dependencies.auth_dependency import (
+    get_current_active_user
+)
+
+from app.dependencies.auth_dependency import (
+    get_current_user,
+    require_admin
+)
+
+from fastapi import Request
+from app.core.limiter import limiter
 
 router = APIRouter(
     prefix="/users",
@@ -40,12 +59,23 @@ router = APIRouter(
     status_code=status.HTTP_200_OK,
     summary="Obtener todos los usuarios",
     description="Consulta todos los usuarios registrados. Permite filtrar por rol, estado y ordenar resultados.",
-    response_description="Lista de usuarios obtenida correctamente."
+    response_description="Lista de usuarios obtenida correctamente.",
+    responses={
+        401: {
+            "description": "No autenticado"
+        },
+        403: {
+            "description": "Acceso denegado"
+        }
+    }
 )
+@limiter.limit("30/minute")
 def read_users(
+    request: Request,
     role: str | None = Query(default=None),
     is_active: bool | None = Query(default=None),
     order_by: str | None = Query(default=None),
+    current_user=Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     return get_users(
@@ -53,6 +83,39 @@ def read_users(
         role,
         is_active,
         order_by
+    )
+
+
+@router.get(
+    "/role/{role}",
+    response_model=list[UserResponse],
+    summary="Buscar usuarios por rol",
+    description="Obtiene todos los usuarios que tienen un rol específico."
+)
+def read_users_by_role(
+    role: str,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_active_user)
+):
+    return get_users_by_role(
+        db,
+        role
+    )
+
+
+@router.get(
+    "/status/{is_active}",
+    response_model=list[UserResponse],
+    summary="Buscar usuarios por estado",
+    description="Obtiene usuarios activos o inactivos."
+)
+def read_users_by_status(
+    is_active: bool,
+    db: Session = Depends(get_db)
+):
+    return get_users_by_status(
+        db,
+        is_active
     )
 
 
@@ -71,6 +134,7 @@ def read_users(
 )
 def read_user(
     user_id: int,
+    current_user = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     user = get_user_by_id(
@@ -97,6 +161,12 @@ def read_user(
     responses={
         400: {
             "description": "Correo ya registrado"
+        },
+        401: {
+            "description": "No autenticado"
+        },
+        403: {
+            "description": "Acceso denegado"
         },
         422: {
             "description": "Error de validación"
@@ -236,6 +306,7 @@ def patch_existing_user(
 )
 def delete_existing_user(
     user_id: int,
+    current_user = Depends(require_admin),
     db: Session = Depends(get_db)
 ):
     user = get_user_by_id(
@@ -257,3 +328,31 @@ def delete_existing_user(
     return Response(
         status_code=status.HTTP_204_NO_CONTENT
     )
+
+@router.post(
+    "/login",
+    summary="Iniciar sesión",
+    description="Valida email y contraseña del usuario."
+)
+def login(
+    credentials: LoginRequest,
+    db: Session = Depends(get_db)
+):
+    user = authenticate_user(
+        db,
+        credentials.email,
+        credentials.password
+    )
+
+    if not user:
+        raise HTTPException(
+            status_code=401,
+            detail="Credenciales inválidas"
+        )
+
+    return {
+        "message": "Login exitoso",
+        "user_id": user.id,
+        "email": user.email,
+        "role": user.role
+    }

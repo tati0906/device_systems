@@ -1127,3 +1127,169 @@ Las relaciones entre tablas permiten modelar correctamente los procesos del sist
 Las consultas avanzadas y los filtros facilitan la obtención de información específica de manera eficiente. Funcionalidades como consultar préstamos por usuario, filtrar por estado o por tipo de dispositivo permiten administrar mejor los recursos y obtener información relevante para la toma de decisiones.
 
 En conclusión, las migraciones, las relaciones entre entidades y las consultas avanzadas son elementos fundamentales para desarrollar aplicaciones robustas, organizadas, escalables y fáciles de mantener.
+
+---------------------------------------------------------------------------------------------------------------------------
+
+# Device Systems API EV11
+
+## Captura de la estructura del proyecto
+
+![Estructura del proyecto](capturas/Estructura11.png)
+
+![Estructura del proyecto](capturas/estructura11.1.png)
+
+---
+
+## Captura de migración Alembic aplicada
+
+![Migración Alembic](capturas/alembic.png)
+
+![Migración Alembic](capturas/alembic.1.png)
+
+---
+
+## Capturas aplicar rate limiting
+
+### 5 solicitudes por minuto
+
+![rate limiting](capturas/11.1F.png)
+
+---
+
+### 3 solicitudes por minuto
+
+![rate limiting](capturas/11.2F.png)
+
+---
+
+### 30 solicitudes por minuto
+
+![rate limiting](capturas/11.3F.png)
+
+---
+
+### 10 solicitudes por minuto
+
+![rate limiting](capturas/11.4F.png)
+
+---
+
+## Pruebas funcionales
+
+### 1. Registro de usuario
+
+![Pruebas](capturas/13.1F.png)
+
+---
+
+## 2. Registro con contraseña débil
+
+![Pruebas](capturas/13.2F.png)
+
+---
+
+### 3. Registro con email duplicado
+
+![Pruebas](capturas/13.3F.png)
+
+---
+
+### 4. Login correcto
+
+![Pruebas](capturas/13.4F.png)
+
+---
+
+## 5. Login con contraseña incorrecta
+
+![Pruebas](capturas/13.5F.png)
+
+---
+
+### 6. Consulta de /auth/me
+
+![Pruebas](capturas/13.6F.png)
+
+---
+
+## 7. Acceso a ruta protegida sin token
+
+![Pruebas](capturas/13.7F.png)
+
+---
+
+### 9. Acceso con usuario sin permisos
+
+![Pruebas](capturas/13.9F.png)
+
+---
+
+## 10. Creación de dispositivo con rol permitido
+
+![Pruebas](capturas/13.10F.png)
+
+---
+
+## 11. Eliminación de dispositivo con rol no permitido
+
+![Pruebas](capturas/13.11F.png)
+
+---
+
+### 12. Configuración CORS
+
+![Pruebas](capturas/13.12F.png)
+
+---
+
+## 13. Cabeceras generadas por middleware
+
+![Pruebas](capturas/13.13F.png)
+
+---
+
+### 14. Activación de rate limiting
+
+![Pruebas](capturas/13.14F.png)
+
+![Pruebas](capturas/13.14.2F.png)
+
+---
+
+## 15. Verificación de Swagger/OpenAPI
+
+![Pruebas](capturas/13.15F.png)
+
+![Pruebas](capturas/13.15.2F.png)
+
+![Pruebas](capturas/13.15.3F.png)
+
+![Pruebas](capturas/13.15.4F.png)
+
+![Pruebas](capturas/13.15.5F.png)
+
+![Pruebas](capturas/13.15.6F.png)
+
+![Pruebas](capturas/13.15.7F.png)
+
+---
+
+## Explicación de CORS configurado
+
+La API tiene configurado CORS mediante el middleware `CORSMiddleware` de FastAPI.
+
+Se permiten solicitudes desde los siguientes orígenes:
+
+```python
+allow_origins = [
+    "http://localhost:5173",
+    "http://localhost:3000"
+]
+
+# Reflexión final sobre la importancia de la seguridad en APIs REST
+
+La seguridad en las APIs REST es un aspecto fundamental para proteger la información y garantizar que únicamente los usuarios autorizados puedan acceder a los recursos del sistema. Durante el desarrollo de este proyecto se implementaron diferentes mecanismos de seguridad, como autenticación mediante JWT, control de roles y permisos, validación de contraseñas seguras, protección de rutas, limitación de solicitudes (Rate Limiting), configuración de CORS y uso de middleware para el monitoreo de peticiones.
+
+Estas medidas permiten reducir riesgos como accesos no autorizados, robo de información, ataques de fuerza bruta y abuso de los servicios expuestos por la API. Además, la documentación mediante Swagger/OpenAPI facilita la comprensión de los mecanismos de seguridad implementados y mejora la experiencia de los desarrolladores que consumen la API.
+
+Como aprendizaje principal, se concluye que la seguridad no debe considerarse una característica opcional, sino un componente esencial desde las primeras etapas del desarrollo. Una API segura protege los datos, mejora la confiabilidad del sistema y brinda mayor confianza tanto a los usuarios como a las organizaciones que utilizan la aplicación.

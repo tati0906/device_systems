@@ -19,6 +19,11 @@ from app.services.device_service import (
     delete_device
 )
 
+from app.dependencies.auth_dependency import (
+    require_admin,
+    require_admin_or_support
+)
+
 router = APIRouter(
     prefix="/devices",
     tags=["Devices"]
@@ -27,10 +32,7 @@ router = APIRouter(
 
 @router.get(
     "/",
-    response_model=list[DeviceResponse],
-    summary="Obtener todos los dispositivos",
-    description="Consulta todos los dispositivos registrados en el sistema.",
-    response_description="Lista de dispositivos obtenida correctamente."
+    response_model=list[DeviceResponse]
 )
 def get_all_devices(
     db: Session = Depends(get_db)
@@ -40,24 +42,13 @@ def get_all_devices(
 
 @router.get(
     "/{device_id}",
-    response_model=DeviceResponse,
-    summary="Obtener dispositivo por ID",
-    description="Consulta un dispositivo específico mediante su identificador.",
-    response_description="Información del dispositivo encontrada.",
-    responses={
-        404: {
-            "description": "Dispositivo no encontrado"
-        }
-    }
+    response_model=DeviceResponse
 )
 def get_device(
     device_id: int,
     db: Session = Depends(get_db)
 ):
-    device = get_device_by_id(
-        db,
-        device_id
-    )
+    device = get_device_by_id(db, device_id)
 
     if not device:
         raise HTTPException(
@@ -71,36 +62,24 @@ def get_device(
 @router.post(
     "/",
     response_model=DeviceResponse,
-    status_code=201,
-    summary="Crear dispositivo",
-    description="Registra un nuevo dispositivo en el sistema.",
-    response_description="Dispositivo creado correctamente."
+    status_code=201
 )
 def create_new_device(
     device: DeviceCreate,
+    current_user=Depends(require_admin_or_support),
     db: Session = Depends(get_db)
 ):
-    return create_device(
-        db,
-        device
-    )
+    return create_device(db, device)
 
 
 @router.put(
     "/{device_id}",
-    response_model=DeviceResponse,
-    summary="Actualizar dispositivo",
-    description="Actualiza completamente la información de un dispositivo.",
-    response_description="Dispositivo actualizado correctamente.",
-    responses={
-        404: {
-            "description": "Dispositivo no encontrado"
-        }
-    }
+    response_model=DeviceResponse
 )
 def update_existing_device(
     device_id: int,
     device: DeviceUpdate,
+    current_user=Depends(require_admin_or_support),
     db: Session = Depends(get_db)
 ):
     updated = update_device(
@@ -120,19 +99,12 @@ def update_existing_device(
 
 @router.patch(
     "/{device_id}",
-    response_model=DeviceResponse,
-    summary="Actualizar parcialmente dispositivo",
-    description="Modifica uno o varios campos de un dispositivo.",
-    response_description="Dispositivo actualizado correctamente.",
-    responses={
-        404: {
-            "description": "Dispositivo no encontrado"
-        }
-    }
+    response_model=DeviceResponse
 )
 def patch_existing_device(
     device_id: int,
     device: DevicePatch,
+    current_user=Depends(require_admin_or_support),
     db: Session = Depends(get_db)
 ):
     updated = patch_device(
@@ -151,18 +123,11 @@ def patch_existing_device(
 
 
 @router.delete(
-    "/{device_id}",
-    summary="Eliminar dispositivo",
-    description="Elimina un dispositivo existente.",
-    response_description="Dispositivo eliminado correctamente.",
-    responses={
-        404: {
-            "description": "Dispositivo no encontrado"
-        }
-    }
+    "/{device_id}"
 )
 def delete_existing_device(
     device_id: int,
+    current_user=Depends(require_admin),
     db: Session = Depends(get_db)
 ):
     deleted = delete_device(
@@ -179,3 +144,4 @@ def delete_existing_device(
     return {
         "message": "Dispositivo eliminado"
     }
+

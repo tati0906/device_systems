@@ -1,20 +1,34 @@
 from sqlalchemy.orm import Session
+
 from app.models.user_model import User
 
+from app.security.security import hash_password
+
+from app.services.security_service import hash_password
+
+from app.services.security_service import verify_password
+
 # Crear usuario
-def create_user(db: Session, user_data):
+def create_user(
+    db: Session,
+    user_data
+):
     user = User(
-        name=user_data.name,
-        email=user_data.email,
-        role=user_data.role,
-        is_active=user_data.is_active
-    )
+    name=user_data.name,
+    email=user_data.email,
+    password=hash_password(
+        user_data.password
+    ),
+    role=user_data.role,
+    is_active=True
+)
 
     db.add(user)
     db.commit()
     db.refresh(user)
 
     return user
+
 
 # Obtener todos los usuarios
 def get_users(
@@ -26,7 +40,9 @@ def get_users(
     query = db.query(User)
 
     if role:
-        query = query.filter(User.role == role)
+        query = query.filter(
+            User.role == role
+        )
 
     if is_active is not None:
         query = query.filter(
@@ -34,10 +50,14 @@ def get_users(
         )
 
     if order_by == "name":
-        query = query.order_by(User.name)
+        query = query.order_by(
+            User.name
+        )
 
     elif order_by == "created_at":
-        query = query.order_by(User.created_at)
+        query = query.order_by(
+            User.created_at
+        )
 
     return query.all()
 
@@ -53,6 +73,7 @@ def get_user_by_id(
         .first()
     )
 
+
 # Buscar usuario por email
 def get_user_by_email(
     db: Session,
@@ -64,6 +85,7 @@ def get_user_by_email(
         .first()
     )
 
+
 # Actualización completa
 def update_user(
     db: Session,
@@ -72,6 +94,11 @@ def update_user(
 ):
     user.name = user_data.name
     user.email = user_data.email
+
+    user.password = hash_password(
+        user_data.password
+    )
+
     user.role = user_data.role
     user.is_active = user_data.is_active
 
@@ -79,6 +106,7 @@ def update_user(
     db.refresh(user)
 
     return user
+
 
 # Actualización parcial
 def patch_user(
@@ -92,13 +120,25 @@ def patch_user(
         )
     )
 
+    if "password" in update_data:
+        update_data["password"] = (
+            hash_password(
+                update_data["password"]
+            )
+        )
+
     for key, value in update_data.items():
-        setattr(user, key, value)
+        setattr(
+            user,
+            key,
+            value
+        )
 
     db.commit()
     db.refresh(user)
 
     return user
+
 
 # Eliminar usuario
 def delete_user(
@@ -107,6 +147,7 @@ def delete_user(
 ):
     db.delete(user)
     db.commit()
+
 
 # Buscar por rol
 def get_users_by_role(
@@ -119,6 +160,7 @@ def get_users_by_role(
         .all()
     )
 
+
 # Buscar por estado
 def get_users_by_status(
     db: Session,
@@ -126,6 +168,29 @@ def get_users_by_status(
 ):
     return (
         db.query(User)
-        .filter(User.is_active == is_active)
+        .filter(
+            User.is_active == is_active
+        )
         .all()
     )
+
+def authenticate_user(
+    db: Session,
+    email: str,
+    password: str
+):
+    user = get_user_by_email(
+        db,
+        email
+    )
+
+    if not user:
+        return None
+
+    if not verify_password(
+        password,
+        user.password
+    ):
+        return None
+
+    return user

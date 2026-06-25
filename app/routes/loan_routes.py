@@ -3,6 +3,12 @@ from sqlalchemy.orm import Session
 
 from app.dependencies.database_dependency import get_db
 
+from app.dependencies.auth_dependency import (
+    get_current_active_user,
+    require_admin,
+    require_admin_or_support
+)
+
 from app.schemas.loan_schema import (
     LoanCreate,
     LoanResponse
@@ -19,6 +25,9 @@ from app.services.loan_service import (
     return_loan
 )
 
+from fastapi import Request
+from app.core.limiter import limiter
+
 router = APIRouter(
     prefix="/loans",
     tags=["Loans"]
@@ -29,8 +38,7 @@ router = APIRouter(
     "/",
     response_model=list[LoanResponse],
     status_code=status.HTTP_200_OK,
-    summary="Obtener todos los préstamos",
-    description="Consulta todos los préstamos registrados en el sistema."
+    dependencies=[Depends(get_current_active_user)]
 )
 def get_all_loans(
     db: Session = Depends(get_db)
@@ -39,9 +47,18 @@ def get_all_loans(
 
 
 @router.get(
+    "/details",
+    dependencies=[Depends(require_admin_or_support)]
+)
+def get_loan_details(
+    db: Session = Depends(get_db)
+):
+    return get_loans(db)
+
+
+@router.get(
     "/status/{returned}",
-    response_model=list[LoanResponse],
-    summary="Filtrar préstamos por estado"
+    response_model=list[LoanResponse]
 )
 def get_loans_status(
     returned: bool,
@@ -55,8 +72,7 @@ def get_loans_status(
 
 @router.get(
     "/device-type/{device_type}",
-    response_model=list[LoanResponse],
-    summary="Filtrar préstamos por tipo de dispositivo"
+    response_model=list[LoanResponse]
 )
 def get_loans_device_type(
     device_type: str,
@@ -70,8 +86,7 @@ def get_loans_device_type(
 
 @router.get(
     "/user/{user_id}",
-    response_model=list[LoanResponse],
-    summary="Consultar préstamos de un usuario"
+    response_model=list[LoanResponse]
 )
 def get_user_loans(
     user_id: int,
@@ -85,8 +100,7 @@ def get_user_loans(
 
 @router.get(
     "/device/{device_id}/history",
-    response_model=list[LoanResponse],
-    summary="Consultar historial de préstamos de un dispositivo"
+    response_model=list[LoanResponse]
 )
 def get_device_history(
     device_id: int,
@@ -101,8 +115,7 @@ def get_device_history(
 @router.get(
     "/{loan_id}",
     response_model=LoanResponse,
-    status_code=status.HTTP_200_OK,
-    summary="Obtener préstamo por ID"
+    status_code=status.HTTP_200_OK
 )
 def get_loan(
     loan_id: int,
@@ -126,9 +139,11 @@ def get_loan(
     "/",
     response_model=LoanResponse,
     status_code=status.HTTP_201_CREATED,
-    summary="Crear préstamo"
+    dependencies=[Depends(get_current_active_user)]
 )
+@limiter.limit("10/minute")
 def create_new_loan(
+    request: Request,
     loan: LoanCreate,
     db: Session = Depends(get_db)
 ):
@@ -162,7 +177,7 @@ def create_new_loan(
     "/{loan_id}/return",
     response_model=LoanResponse,
     status_code=status.HTTP_200_OK,
-    summary="Devolver dispositivo"
+    dependencies=[Depends(require_admin_or_support)]
 )
 def return_device(
     loan_id: int,
@@ -186,3 +201,4 @@ def return_device(
         )
 
     return result
+

@@ -27,6 +27,11 @@ class User(Base):
         index=True
     )
 
+    password = Column(
+       String,
+       nullable=False
+   )
+
     role = Column(
         String,
         nullable=False

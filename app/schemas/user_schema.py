@@ -1,15 +1,27 @@
 from typing import Optional, Literal
-from pydantic import BaseModel, EmailStr, Field, ConfigDict
+from pydantic import (
+    BaseModel,
+    EmailStr,
+    Field,
+    ConfigDict,
+    field_validator
+)
+
 
 
 # Crear usuario
 class UserCreate(BaseModel):
+
     name: str = Field(
         min_length=3,
         description="Nombre del usuario"
     )
 
     email: EmailStr
+
+    password: str = Field(
+        min_length=6
+    )
 
     role: Literal["admin", "support", "user"]
 
@@ -18,11 +30,16 @@ class UserCreate(BaseModel):
 
 # Actualización completa
 class UserUpdate(BaseModel):
+
     name: str = Field(
         min_length=3
     )
 
     email: EmailStr
+
+    password: str = Field(
+        min_length=6
+    )
 
     role: Literal["admin", "support", "user"]
 
@@ -38,11 +55,22 @@ class UserPatch(BaseModel):
 
     email: Optional[EmailStr] = None
 
-    role: Optional[Literal["admin", "support", "user"]] = None
+    role: Optional[
+        Literal["admin", "support", "user"]
+    ] = None
 
     is_active: Optional[bool] = None
 
+    @field_validator("name")
+    @classmethod
+    def validate_name(cls, value):
+        if value is not None and not value.replace(" ", "").isalpha():
+            raise ValueError(
+                "El nombre solo puede contener letras"
+            )
+        return value
 
+# Respuesta
 # Respuesta
 class UserResponse(BaseModel):
     id: int
@@ -54,3 +82,7 @@ class UserResponse(BaseModel):
     model_config = ConfigDict(
         from_attributes=True
     )
+
+class LoginRequest(BaseModel):  
+    email: str
+    password: str
